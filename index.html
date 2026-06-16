@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>公共经济学 · 互动教学平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            padding: 32px 28px;
+            min-height: 100vh;
+        }
+
+        .app {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* 全局字体、行距统一 */
+        body, button, input, textarea, select, .card-body, .role-badge {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* 模态框 */
+        .login-overlay, .forgot-overlay, .register-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(18, 35, 48, 0.86);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .login-card, .forgot-card, .register-card {
+            background: #ffffff;
+            border-radius: 36px;
+            padding: 40px 44px;
+            width: 90%;
+            max-width: 460px;
+            box-shadow: 0 30px 45px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            border-top: 5px solid #2c5f7a;
+        }
+
+        .login-card h2, .forgot-card h2, .register-card h2 {
+            color: #1e3b4a;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+            margin-bottom: 32px;
+            font-size: 1.85rem;
+        }
+
+        .login-card input, .forgot-card input, .register-card input {
+            width: 100%;
+            margin-bottom: 24px;
+            padding: 14px 20px;
+            border-radius: 48px;
+            border: 1px solid #cfdfe8;
+            font-size: 0.95rem;
+            background: #ffffff;
+            transition: 0.2s;
+        }
+
+        .login-card input:focus, .forgot-card input:focus, .register-card input:focus {
+            outline: none;
+            border-color: #2c5f7a;
+            box-shadow: 0 0 0 3px rgba(44, 95, 122, 0.12);
+        }
+
+        .login-card button, .forgot-card button, .register-card button {
+            width: 100%;
+            background: #2c5f7a;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 48px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+        }
+
+        .login-card button:hover, .forgot-card button:hover, .register-card button:hover {
+            background: #1f4a60;
+            transform: translateY(-1px);
+        }
+
+        .error-msg {
+            color: #c0392b;
+            font-size: 0.8rem;
+            margin-top: 14px;
+        }
+
+        .success-msg {
+            color: #2c5f7a;
+            font-size: 0.8rem;
+        }
+
+        .link-btn {
+            background: none;
+            color: #2c5f7a;
+            text-decoration: underline;
+            padding: 8px;
+            font-size: 0.8rem;
+            margin-top: 12px;
+            box-shadow: none;
+            width: auto;
+        }
+
+        .link-btn:hover {
+            background: none;
+            transform: none;
+            color: #124e66;
+        }
+
+        .demo-note {
+            margin-top: 24px;
+            background: #fef7e0;
+            padding: 14px 18px;
+            border-radius: 28px;
+            font-size: 0.75rem;
+            color: #6b7b8c;
+            border-left: 4px solid #e6b450;
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        /* 主界面头部 */
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border-radius: 60px;
+            padding: 10px 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e2edf2;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .role-badge {
+            background: #eef3f7;
+            padding: 8px 28px;
+            border-radius: 40px;
+            font-weight: 550;
+            color: #1e3b4a;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            background: #dce6ec;
+            color: #2c5f7a;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: #cbdae2;
+        }
+
+        .change-pwd-btn {
+            background: #e6b450;
+            color: #2c3e50;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+        }
+
+        /* 四栏布局 (课件板块新增) */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 28px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            border: 1px solid #e2edf2;
+            display: flex;
+            flex-direction: column;
+            height: fit-content;
+        }
+
+        .card-header {
+            background: #f9fbfd;
+            padding: 20px 24px;
+            border-bottom: 2px solid #e9f0f4;
+        }
+
+        .card-header h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1e3b4a;
+            letter-spacing: -0.2px;
+        }
+
+        .card-body {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #2c5f7a;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d6e3ea;
+            border-radius: 28px;
+            font-size: 0.9rem;
+            background: #ffffff;
+            transition: 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #2c5f7a;
+            box-shadow: 0 0 0 3px rgba(44, 95, 122, 0.08);
+        }
+
+        button {
+            background: #2c5f7a;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+
+        button:hover {
+            background: #1f4a60;
+            transform: translateY(-1px);
+        }
+
+        .item-list {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .qa-item, .forum-item, .assignment-item, .resource-item {
+            background: #fefefe;
+            border-radius: 24px;
+            padding: 18px 20px;
+            border: 1px solid #eef3f7;
+            border-left: 5px solid #2c5f7a;
+            transition: all 0.1s;
+            line-height: 1.45;
+        }
+
+        .question-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1e3b4a;
+            margin-bottom: 8px;
+        }
+
+        .answer-block {
+            background: #f9fbfe;
+            border-radius: 20px;
+            padding: 12px 16px;
+            margin: 12px 0 8px 0;
+            border: 1px solid #e9f0f4;
+        }
+
+        .info-meta {
+            font-size: 0.7rem;
+            color: #7b8c9e;
+            margin-top: 8px;
+        }
+
+        .teacher-reply {
+            background: #fef7e0;
+            margin-top: 14px;
+            padding: 10px 16px;
+            border-radius: 20px;
+            border-left: 3px solid #e6b450;
+            font-size: 0.85rem;
+        }
+
+        .empty-msg {
+            text-align: center;
+            padding: 32px 12px;
+            color: #98abb9;
+            font-size: 0.85rem;
+        }
+
+        .file-tag {
+            background: #eef2f8;
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            margin: 10px 0;
+            color: #2c5f7a;
+        }
+
+        .feedback-area {
+            background: #fafcfd;
+            padding: 14px;
+            border-radius: 20px;
+            margin-top: 14px;
+            border: 1px solid #e9f0f4;
+        }
+
+        .inline-flex {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .upload-area {
+            background: #f9fbfe;
+            border-radius: 24px;
+            padding: 16px;
+            border: 1px dashed #cbdae2;
+            margin-top: 8px;
+        }
+
+        .resource-item a {
+            color: #2c5f7a;
+            text-decoration: none;
+            font-weight: 500;
+            word-break: break-all;
+        }
+        .resource-item a:hover {
+            text-decoration: underline;
+        }
+        .delete-btn-modern {
+            background: #e0e8ef;
+            color: #3a6075;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .delete-btn-modern:hover {
+            background: #cbdae2;
+            color: #1f3f4d;
+            transform: none;
+        }
+
+        @media (max-width: 1200px) {
+            .modules-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 24px;
+            }
+        }
+        @media (max-width: 760px) {
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 20px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app" id="appRoot"></div>
+
+<script>
+    // ---------- 数据模型 ----------
+    let appData = {
+        questions: [],      
+        forumPosts: [],     
+        assignments: [],    
+        teacherPassword: "teacher123",
+        teacherSecurity: "public123",
+        students: [],
+        courseMaterials: []   // 课件资源 { id, fileName, fileDataUrl, fileType, uploadDate }
+    };
+
+    let currentUser = null;
+
+    function initStudents() {
+        if (appData.students.length === 0) {
+            appData.students = [
+                { fullId: "3240100001", password: "0001", security: "0001", name: "张明" },
+                { fullId: "3240100002", password: "0002", security: "0002", name: "李芳" },
+                { fullId: "3240100003", password: "0003", security: "0003", name: "王磊" },
+                { fullId: "3240100004", password: "0004", security: "0004", name: "赵雪" }
+            ];
+        }
+    }
+
+    function getMaskedStudentId(fullId) {
+        if (!fullId) return "????";
+        const str = String(fullId);
+        return str.length >= 4 ? str.slice(-4) : str;
+    }
+
+    function loadData() {
+        const stored = localStorage.getItem('eco_platform_v12_final');
+        if (stored) {
+            try {
+                const data = JSON.parse(stored);
+                if (data.questions) appData.questions = data.questions;
+                if (data.forumPosts) appData.forumPosts = data.forumPosts;
+                if (data.assignments) appData.assignments = data.assignments;
+                if (data.teacherPassword) appData.teacherPassword = data.teacherPassword;
+                if (data.teacherSecurity) appData.teacherSecurity = data.teacherSecurity;
+                if (data.students) appData.students = data.students;
+                if (data.courseMaterials) appData.courseMaterials = data.courseMaterials;
+            } catch(e) {}
+        }
+        initStudents();
+        if (appData.questions.length === 0) {
+            appData.questions = [
+                { id: "q1", text: "公共物品的非排他性如何导致市场失灵？", type: "essay", date: new Date().toISOString(), answers: [{ id: "a1", content: "非排他性会产生搭便车问题，私人部门供给不足。", date: new Date().toISOString(), studentIdMask: "0001", studentFullId: "3240100001" }] },
+                { id: "q2", text: "庇古税是用来解决______外部性的工具。", type: "blank", blankAnswer: "负", date: new Date().toISOString(), answers: [] }
+            ];
+        }
+        if (appData.forumPosts.length === 0) {
+            appData.forumPosts = [
+                { id: "f1", type: "question", title: "关于碳税的国际经验", content: "发达国家碳税实施效果如何？", teacherReply: "可以参考欧盟碳市场与碳税结合的经验。", submittedAt: new Date().toISOString(), studentIdMask: "0002" },
+                { id: "f2", type: "thanks", title: "感谢老师讲解公共产品", content: "灯塔经济学案例非常生动。", teacherReply: "谢谢认可，希望继续深入思考。", submittedAt: new Date().toISOString(), studentIdMask: "0003" }
+            ];
+        }
+        if (appData.assignments.length === 0) {
+            appData.assignments = [
+                { id: "ass1", title: "第一次作业: 公共产品分析", content: "以社区图书馆为例分析公共产品属性。", fileDataUrl: null, fileName: null, teacherFeedback: "结构清晰，可补充非竞争性讨论。", grade: 85, submittedAt: new Date().toISOString(), studentIdMask: "0001" }
+            ];
+        }
+        if (appData.courseMaterials.length === 0) {
+            appData.courseMaterials = [
+                { id: "mat1", fileName: "第一章_公共经济学导论.pdf", fileDataUrl: null, fileType: "pdf", uploadDate: new Date().toISOString() },
+                { id: "mat2", fileName: "课件_公共产品理论.pptx", fileDataUrl: null, fileType: "pptx", uploadDate: new Date().toISOString() }
+            ];
+        }
+        saveData();
+    }
+
+    function saveData() {
+        localStorage.setItem('eco_platform_v12_final', JSON.stringify({
+            questions: appData.questions,
+            forumPosts: appData.forumPosts,
+            assignments: appData.assignments,
+            teacherPassword: appData.teacherPassword,
+            teacherSecurity: appData.teacherSecurity,
+            students: appData.students,
+            courseMaterials: appData.courseMaterials
+        }));
+    }
+
+    // --- 课件管理 ---
+    function uploadMaterial(fileName, fileDataUrl, fileType) {
+        if (!fileName || !fileDataUrl) return false;
+        const newMaterial = {
+            id: Date.now() + "_mat",
+            fileName: fileName,
+            fileDataUrl: fileDataUrl,
+            fileType: fileType,
+            uploadDate: new Date().toISOString()
+        };
+        appData.courseMaterials.unshift(newMaterial);
+        saveData();
+        renderMainApp();
+        return true;
+    }
+
+    function deleteMaterial(materialId) {
+        appData.courseMaterials = appData.courseMaterials.filter(m => m.id !== materialId);
+        saveData();
+        renderMainApp();
+    }
+
+    function readFileAsBase64(file) {
+        return new Promise(resolve => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.readAsDataURL(file); });
+    }
+
+    // 注册、登录、密码逻辑（保持原有简洁）
+    function registerStudent(fullId, password, name) {
+        if (!fullId || fullId === "3240100000") return { success: false, msg: "无效学号" };
+        if (fullId.length < 4) return { success: false, msg: "学号至少4位" };
+        if (!password || password.length < 4) return { success: false, msg: "密码≥4位" };
+        if (!name.trim()) return { success: false, msg: "请填写姓名" };
+        if (appData.students.find(s => s.fullId === fullId)) return { success: false, msg: "学号已存在" };
+        const security = fullId.slice(-4);
+        appData.students.push({ fullId, password, security, name: name.trim() });
+        saveData();
+        return { success: true, msg: "注册成功！请登录" };
+    }
+    function changeTeacherPassword(oldPwd, newPwd) { if(oldPwd !== appData.teacherPassword || newPwd?.length<4) return false; appData.teacherPassword = newPwd; saveData(); return true; }
+    function changeStudentPassword(studentId, oldPwd, newPwd) { const s = appData.students.find(s=>s.fullId===studentId); if(!s || s.password!==oldPwd || newPwd?.length<4) return false; s.password = newPwd; saveData(); return true; }
+    function resetTeacherPassword(security, newPwd) { if(security !== appData.teacherSecurity || newPwd?.length<4) return false; appData.teacherPassword = newPwd; saveData(); return true; }
+    function resetStudentPassword(sid, sec, newPwd) { const s = appData.students.find(s=>s.fullId===sid); if(!s || s.security!==sec || newPwd?.length<4) return false; s.password = newPwd; saveData(); return true; }
+
+    function addQuestion(questionText, questionType, blankAnswerText) { if(!questionText.trim()) return; const newQ = { id:Date.now()+"_q", text:questionText.trim(), type:questionType, date:new Date().toISOString(), answers:[] }; if(questionType==='blank') newQ.blankAnswer = blankAnswerText?.trim()||''; appData.questions.unshift(newQ); saveData(); renderMainApp(); }
+    function deleteQuestion(qid) { appData.questions = appData.questions.filter(q=>q.id !== qid); saveData(); renderMainApp(); }
+    function addStudentAnswer(qid, ans, mask, fullId) { const q = appData.questions.find(q=>q.id===qid); if(!q || !ans?.trim()) return; const idx = q.answers.findIndex(a=>a.studentFullId===fullId); if(idx!==-1) q.answers[idx] = { ...q.answers[idx], content:ans.trim(), date:new Date().toISOString() }; else q.answers.push({ id:Date.now()+"_a", content:ans.trim(), date:new Date().toISOString(), studentIdMask:mask, studentFullId:fullId }); saveData(); renderMainApp(); }
+    function addForumPost(type, title, content, mask) { if(!title.trim()||!content.trim()) return; appData.forumPosts.unshift({ id:Date.now()+"_post", type, title:title.trim(), content:content.trim(), teacherReply:"", submittedAt:new Date().toISOString(), studentIdMask:mask }); saveData(); renderMainApp(); }
+    function teacherReplyToForum(pid, reply) { const p = appData.forumPosts.find(p=>p.id===pid); if(p && p.type==='question') { p.teacherReply = reply?.trim()||""; saveData(); renderMainApp(); } }
+    function deleteForumPost(pid) { appData.forumPosts = appData.forumPosts.filter(p=>p.id!==pid); saveData(); renderMainApp(); }
+    function addAssignment(title, content, fileBase64, fileName, mask) { if((!title?.trim()) && !fileBase64) return false; const finalTitle = (title?.trim()) ? title.trim() : (fileName || "未命名作业"); const finalContent = (content?.trim()) ? content.trim() : (fileBase64 ? "📎 已提交附件，无文字说明" : ""); appData.assignments.unshift({ id:Date.now()+"_ass", title:finalTitle, content:finalContent, fileDataUrl:fileBase64||null, fileName:fileName||null, teacherFeedback:"", grade:null, submittedAt:new Date().toISOString(), studentIdMask:mask }); saveData(); renderMainApp(); return true; }
+    function gradeAssignment(aid, grade, fb) { const a = appData.assignments.find(a=>a.id===aid); if(a){ if(grade!==undefined && grade!==""){ let g=parseInt(grade); if(!isNaN(g)&&g>=0&&g<=100) a.grade=g; else a.grade=null; } if(fb!==undefined) a.teacherFeedback=fb; saveData(); renderMainApp(); } }
+    function deleteAssignment(aid) { appData.assignments = appData.assignments.filter(a=>a.id!==aid); saveData(); renderMainApp(); }
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    function showChangePasswordDialog(isTeacher) { /* 保持简洁*/ if(isTeacher){ let old = prompt("当前密码:"); if(!old) return; let newp = prompt("新密码(≥4位):"); if(newp?.length>=4 && changeTeacherPassword(old,newp)){ alert("修改成功,请重新登录"); currentUser=null; renderLogin(); } else alert("原密码错误或过短"); } else { let old=prompt("当前密码:"); let newp=prompt("新密码(≥4位):"); if(newp?.length>=4 && changeStudentPassword(currentUser.fullId,old,newp)){ alert("成功,请重新登录"); currentUser=null; renderLogin(); } else alert("旧密码错误"); } }
+    function showForgotPassword() { const root=document.getElementById('appRoot'); root.innerHTML=`<div class="forgot-overlay"><div class="forgot-card"><h2>重置密码</h2><select id="forgotRole"><option value="teacher">教师</option><option value="student">学生</option></select><input id="forgotId" placeholder="学号/工号"><input id="forgotSecurity" placeholder="安全验证码"><input type="password" id="forgotNewPwd" placeholder="新密码"><button id="resetPwdBtn">重置</button><button id="backToLoginFromForgot" class="link-btn">返回登录</button><div id="forgotMsg"></div></div></div>`;
+        const reset=()=>{ let role=document.getElementById('forgotRole').value, id=document.getElementById('forgotId').value.trim(), sec=document.getElementById('forgotSecurity').value.trim(), newp=document.getElementById('forgotNewPwd').value.trim(), msgDiv=document.getElementById('forgotMsg'); if(newp.length<4){ msgDiv.innerText="密码至少4位"; return; } if(role==='teacher'){ if(id!=="3240100000") msgDiv.innerText="工号错误"; else if(resetTeacherPassword(sec,newp)){ msgDiv.style.color="#2c5f7a"; msgDiv.innerText="重置成功,跳转登录"; setTimeout(()=>renderLogin(),1500); } else msgDiv.innerText="安全验证失败"; } else { if(!id) msgDiv.innerText="学号必填"; else if(resetStudentPassword(id,sec,newp)){ msgDiv.style.color="#2c5f7a"; msgDiv.innerText="重置成功,跳转登录"; setTimeout(()=>renderLogin(),1500); } else msgDiv.innerText="学号或安全答案错误"; } }; document.getElementById('resetPwdBtn').addEventListener('click',reset); document.getElementById('backToLoginFromForgot').addEventListener('click',()=>renderLogin()); }
+    function showRegister() { const root=document.getElementById('appRoot'); root.innerHTML=`<div class="register-overlay"><div class="register-card"><h2>学生注册</h2><input id="regFullId" placeholder="学号"><input id="regName" placeholder="姓名"><input type="password" id="regPassword" placeholder="密码(≥4位)"><button id="doRegisterBtn">注册</button><button id="backToLoginFromReg" class="link-btn">返回登录</button><div id="regMsg"></div><div class="demo-note">安全验证默认为学号后四位。</div></div></div>`;
+        document.getElementById('doRegisterBtn').addEventListener('click',()=>{ let id=document.getElementById('regFullId').value.trim(), name=document.getElementById('regName').value.trim(), pwd=document.getElementById('regPassword').value.trim(), res=registerStudent(id,pwd,name), msgDiv=document.getElementById('regMsg'); if(res.success){ msgDiv.className='success-msg'; msgDiv.innerText=res.msg; setTimeout(()=>renderLogin(),1800); } else { msgDiv.className='error-msg'; msgDiv.innerText=res.msg; } }); document.getElementById('backToLoginFromReg').addEventListener('click',()=>renderLogin()); }
+    function renderLogin() { const root=document.getElementById('appRoot'); root.innerHTML=`<div class="login-overlay"><div class="login-card"><h2>公共经济学</h2><input id="loginId" placeholder="学号/工号"><input type="password" id="loginPassword" placeholder="密码"><button id="doLoginBtn">登录</button><button id="registerNowBtn" class="link-btn">✨ 注册学生账号</button><button id="forgotPwdBtn" class="link-btn">忘记密码？</button><div id="loginError"></div><div class="demo-note">教师 3240100000 / teacher123<br>学生示例 3240100001 / 0001<br>安全验证:教师public123,学生学号后四位</div></div></div>`;
+        document.getElementById('doLoginBtn').addEventListener('click',()=>{ let uid=document.getElementById('loginId').value.trim(), pwd=document.getElementById('loginPassword').value.trim(), err=document.getElementById('loginError'); if(uid==="3240100000" && pwd===appData.teacherPassword){ currentUser={role:'teacher', id:uid}; renderMainApp(); } else { let s=appData.students.find(s=>s.fullId===uid && s.password===pwd); if(s){ currentUser={role:'student', fullId:s.fullId, maskedId:getMaskedStudentId(s.fullId)}; renderMainApp(); } else err.innerText="账号或密码错误"; } }); document.getElementById('forgotPwdBtn').addEventListener('click',showForgotPassword); document.getElementById('registerNowBtn').addEventListener('click',showRegister); }
+
+    // 渲染四大板块（课程互动，课后问答，作业提交，课件资源）
+    function renderMainApp() {
+        if(!currentUser) return renderLogin();
+        const isTeacher = currentUser.role === 'teacher';
+        const root = document.getElementById('appRoot');
+        root.innerHTML = `<div class="main-header"><div class="role-badge">${isTeacher ? '👩‍🏫 教师端 · 公共经济学' : `👩‍🎓 学生端 · ${currentUser.fullId} (${currentUser.maskedId})`}</div><div style="display:flex; gap:12px;"><button id="changePwdBtn" class="change-pwd-btn">🔐 修改密码</button><button id="logoutBtnMain" class="logout-btn">🚪 退出</button></div></div><div class="modules-grid"><div class="card"><div class="card-header"><h3>📖 课程互动</h3></div><div class="card-body" id="interactionPanel"></div></div><div class="card"><div class="card-header"><h3>💬 课后问答</h3></div><div class="card-body" id="forumPanel"></div></div><div class="card"><div class="card-header"><h3>📂 作业提交</h3></div><div class="card-body" id="assignmentPanel"></div></div><div class="card"><div class="card-header"><h3>📑 课件资源</h3></div><div class="card-body" id="materialPanel"></div></div></div>`;
+        document.getElementById('logoutBtnMain').addEventListener('click',()=>{ currentUser=null; renderLogin(); });
+        document.getElementById('changePwdBtn').addEventListener('click',()=>showChangePasswordDialog(isTeacher));
+        renderInteractionPanel(isTeacher);
+        renderForumPanel(isTeacher);
+        renderAssignmentPanel(isTeacher);
+        renderMaterialPanel(isTeacher);
+    }
+
+    function renderInteractionPanel(isTeacher) {
+        const container = document.getElementById('interactionPanel'); if(!container) return;
+        if(isTeacher){
+            let html = `<div><textarea id="newQuestionText" rows="2" placeholder="发布新问题..."></textarea><select id="questionTypeSelect"><option value="essay">简答题</option><option value="blank">填空题</option></select><input id="blankAnswerInput" placeholder="填空标准答案" style="display:none;"><button id="publishQuestionBtn" style="margin-top:12px;">发布</button></div><div class="item-list">`;
+            appData.questions.forEach(q=>{ html+=`<div class="qa-item"><div class="question-title">${escapeHtml(q.text)}<button class="delete-q-modern" data-id="${q.id}" style="float:right; background:#e0e8ef; color:#3a6075; border-radius:30px; padding:2px 12px;">🗑️ 删除</button></div>${q.answers.map(a=>`<div class="answer-block">🧑‍🎓 ${a.studentIdMask}: ${escapeHtml(a.content)}</div>`).join('')||'<div class="empty-msg">暂无回答</div>'}</div>`; });
+            html+=`</div>`; container.innerHTML=html;
+            document.getElementById('questionTypeSelect').addEventListener('change',()=>{ document.getElementById('blankAnswerInput').style.display = document.getElementById('questionTypeSelect').value==='blank'?'block':'none'; });
+            document.getElementById('publishQuestionBtn').onclick=()=>{ let txt=document.getElementById('newQuestionText').value; let type=document.getElementById('questionTypeSelect').value; let blankAns=document.getElementById('blankAnswerInput').value; if(txt) addQuestion(txt,type,blankAns); else alert("输入问题"); };
+            document.querySelectorAll('.delete-q-modern').forEach(btn=>btn.addEventListener('click',()=>{ if(confirm('删除问题？')) deleteQuestion(btn.dataset.id); }));
+        } else {
+            let html=`<div class="item-list">`; appData.questions.forEach(q=>{ html+=`<div class="qa-item"><div class="question-title">${escapeHtml(q.text)}</div><div class="answer-block-list">${q.answers.filter(a=>a.studentFullId===currentUser.fullId).map(a=>`<div>📝 我的回答: ${escapeHtml(a.content)}</div>`).join('')}</div><textarea id="ans_${q.id}" rows="2" placeholder="你的回答..."></textarea><button class="submitAnsBtn" data-id="${q.id}" style="margin-top:10px;">提交/修改</button></div>`; }); html+=`</div>`; container.innerHTML=html; document.querySelectorAll('.submitAnsBtn').forEach(btn=>btn.addEventListener('click',()=>{ let val=document.getElementById(`ans_${btn.dataset.id}`).value; if(val) addStudentAnswer(btn.dataset.id,val,currentUser.maskedId,currentUser.fullId); else alert("填写回答"); }));
+        }
+    }
+    function renderForumPanel(isTeacher) {
+        const c=document.getElementById('forumPanel'); if(!c) return;
+        if(isTeacher){ let h=`<div class="item-list">`; appData.forumPosts.forEach(p=>{ h+=`<div class="forum-item"><b>${escapeHtml(p.title)}</b> <span class="info-meta">(学号:${p.studentIdMask})</span><div>${escapeHtml(p.content)}</div><textarea id="reply_${p.id}" rows="2" placeholder="教师回复...">${escapeHtml(p.teacherReply||'')}</textarea><button class="saveReplyBtn" data-id="${p.id}" style="margin-top:8px;">💬 回复</button><button class="delete-forum-modern" data-id="${p.id}" style="background:#e0e8ef; margin-left:8px;">🗑️ 删除</button></div>`; }); h+=`</div>`; c.innerHTML=h; document.querySelectorAll('.saveReplyBtn').forEach(btn=>btn.addEventListener('click',()=>{ teacherReplyToForum(btn.dataset.id,document.getElementById(`reply_${btn.dataset.id}`).value); })); document.querySelectorAll('.delete-forum-modern').forEach(btn=>btn.addEventListener('click',()=>{ if(confirm('删除该条？')) deleteForumPost(btn.dataset.id); })); }
+        else { let h=`<div><input id="forumTitle" placeholder="标题"><textarea id="forumContent" rows="2" placeholder="内容"></textarea><select id="forumType"><option value="question">❓ 疑问</option><option value="thanks">🙏 感谢</option></select><button id="postForumBtn">发布</button></div><div class="item-list">`; appData.forumPosts.forEach(p=>{ h+=`<div class="forum-item"><b>${escapeHtml(p.title)}</b><div>${escapeHtml(p.content)}</div>${p.teacherReply?`<div class="teacher-reply">👩‍🏫 教师回复: ${escapeHtml(p.teacherReply)}</div>`:''}<div class="info-meta">${new Date(p.submittedAt).toLocaleString()}</div></div>`; }); h+=`</div>`; c.innerHTML=h; document.getElementById('postForumBtn').onclick=()=>{ let type=document.getElementById('forumType').value, title=document.getElementById('forumTitle').value, content=document.getElementById('forumContent').value; if(title&&content) addForumPost(type,title,content,currentUser.maskedId); else alert("完善内容"); }; }
+    }
+    function renderAssignmentPanel(isTeacher) {
+        const c=document.getElementById('assignmentPanel'); if(!c) return;
+        if(isTeacher){ let h=`<div class="item-list">`; appData.assignments.forEach(a=>{ h+=`<div class="assignment-item"><b>${escapeHtml(a.title)}</b> (${a.studentIdMask})<div>${escapeHtml(a.content)}</div>${a.fileDataUrl?`<div class="file-tag">📎 <a href="${a.fileDataUrl}" download="${escapeHtml(a.fileName)}">${escapeHtml(a.fileName)}</a></div>`:''}<div class="feedback-area"><input id="grade_${a.id}" placeholder="分数" value="${a.grade??''}" style="width:90px;"><input id="fb_${a.id}" placeholder="评语" value="${escapeHtml(a.teacherFeedback||'')}"><button class="saveGradeBtn" data-id="${a.id}">保存批改</button><button class="delete-ass-modern" data-id="${a.id}" style="background:#e0e8ef; margin-left:6px;">删除</button></div></div>`; }); h+=`</div>`; c.innerHTML=h; document.querySelectorAll('.saveGradeBtn').forEach(btn=>btn.addEventListener('click',()=>{ gradeAssignment(btn.dataset.id,document.getElementById(`grade_${btn.dataset.id}`).value,document.getElementById(`fb_${btn.dataset.id}`).value); })); document.querySelectorAll('.delete-ass-modern').forEach(btn=>btn.addEventListener('click',()=>{ if(confirm('删除作业')) deleteAssignment(btn.dataset.id); })); }
+        else { let h=`<div><input id="assTitle" placeholder="标题(可选)"><textarea id="assContent" rows="2" placeholder="描述(可选)"></textarea><div class="upload-area"><input type="file" id="assFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"></div><button id="submitAssignmentBtn">📤 提交 (可只传文件)</button></div><div class="item-list" id="myAssignList"></div>`; c.innerHTML=h; const refreshMy=()=>{ let my=appData.assignments.filter(a=>a.studentIdMask===currentUser.maskedId); let html=''; my.forEach(a=>{ html+=`<div class="assignment-item"><b>${escapeHtml(a.title)}</b><div>${escapeHtml(a.content)}</div>${a.fileDataUrl?`<div class="file-tag"><a href="${a.fileDataUrl}" download>📎 ${escapeHtml(a.fileName)}</a></div>`:''}${a.grade!==null?`<div class="teacher-reply">🎯 得分:${a.grade} · ${escapeHtml(a.teacherFeedback||'')}</div>`:(a.teacherFeedback?`<div>📢 ${escapeHtml(a.teacherFeedback)}</div>`:'')}</div>`; }); document.getElementById('myAssignList').innerHTML=html||'<div class="empty-msg">暂无作业</div>'; }; refreshMy(); document.getElementById('submitAssignmentBtn').addEventListener('click',async()=>{ let title=document.getElementById('assTitle').value; let content=document.getElementById('assContent').value; let file=document.getElementById('assFile').files[0]; let b64=null,fn=null; if(file){ fn=file.name; b64=await readFileAsBase64(file); } if(!title?.trim() && !b64){ alert("请至少填写标题或上传文件"); return; } addAssignment(title,content,b64,fn,currentUser.maskedId); document.getElementById('assTitle').value=''; document.getElementById('assContent').value=''; document.getElementById('assFile').value=''; refreshMy(); }); }
+    }
+    function renderMaterialPanel(isTeacher) {
+        const c=document.getElementById('materialPanel'); if(!c) return;
+        if(isTeacher){
+            let html=`<div class="upload-area"><input type="file" id="materialFile" accept=".pdf,.doc,.docx,.ppt,.pptx"><button id="uploadMaterialBtn">📚 上传课件</button></div><div class="item-list" id="materialList"></div>`;
+            c.innerHTML=html;
+            const refreshMaterials=()=>{ let listDiv=document.getElementById('materialList'); let h=''; appData.courseMaterials.forEach(m=>{ h+=`<div class="resource-item"><div style="display:flex; justify-content:space-between;"><span>📄 ${escapeHtml(m.fileName)}</span><button class="delete-mat-modern" data-id="${m.id}" style="background:#e0e8ef; padding:2px 12px;">删除</button></div><div class="info-meta">上传于 ${new Date(m.uploadDate).toLocaleString()}</div>${m.fileDataUrl?`<div><a href="${m.fileDataUrl}" download="${escapeHtml(m.fileName)}">⬇️ 下载课件</a></div>`:'<div class="empty-msg">文件预览不可用，请重新上传</div>'}</div>`; }); listDiv.innerHTML=h||'<div class="empty-msg">暂无课件</div>'; document.querySelectorAll('.delete-mat-modern').forEach(btn=>btn.addEventListener('click',()=>{ if(confirm('删除课件?')) deleteMaterial(btn.dataset.id); })); };
+            document.getElementById('uploadMaterialBtn').addEventListener('click',async()=>{ let fileInput=document.getElementById('materialFile'); if(!fileInput.files.length) return alert("请选择文件"); let file=fileInput.files[0]; let b64=await readFileAsBase64(file); if(uploadMaterial(file.name,b64,file.name.split('.').pop())){ alert("课件上传成功"); refreshMaterials(); fileInput.value=''; } else alert("上传失败"); });
+            refreshMaterials();
+        } else {
+            let html=`<div class="item-list" id="studentMaterialList"></div>`; c.innerHTML=html;
+            let h=''; appData.courseMaterials.forEach(m=>{ h+=`<div class="resource-item"><div>📘 ${escapeHtml(m.fileName)}</div><div class="info-meta">${new Date(m.uploadDate).toLocaleString()}</div>${m.fileDataUrl?`<div style="margin-top:8px;"><a href="${m.fileDataUrl}" download="${escapeHtml(m.fileName)}">📥 下载课件</a> <button class="preview-material" data-url="${m.fileDataUrl}" data-name="${escapeHtml(m.fileName)}" style="margin-left:12px;">👁️ 在线预览</button></div>`:'<div class="empty-msg">文件缺失</div>'}</div>`; });
+            document.getElementById('studentMaterialList').innerHTML=h||'<div class="empty-msg">暂无课件</div>';
+            document.querySelectorAll('.preview-material').forEach(btn=>btn.addEventListener('click',()=>{ let url=btn.dataset.url; let name=btn.dataset.name; window.open(url,'_blank'); }));
+        }
+    }
+
+    loadData();
+    renderLogin();
+</script>
+</body>
+</html>
